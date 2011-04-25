@@ -10,14 +10,6 @@
  * and search radius. This will return JSON strings in plaintext
  * format to the browser/client. 
  */
-/*
-header('Content-Type: text/javascript; charset=utf8');
-// If we ever want to release an API or something, we should turn this into foreach 
-// through an array of URLs
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Max-Age: 3628800');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-*/
 $time_start = microtime(true); 
  
 include "FINsert/config.php"; // get db credentials ...
@@ -68,7 +60,7 @@ function get_object($lat, $long, $cat, $rad) {
 		$return_string = "";
 		foreach ($cat as $cat_item) {
 			$piece = get_single_category($lat, $long, $cat_item, $rad);
-			if ($piece != "[]") // hack
+			if ($piece != "[]") // hack - don't return empty results
 				$return_string .= $piece;
 		}
 		return $return_string;
@@ -145,11 +137,11 @@ function get_single_category($lat, $long, $cat, $rad) {
 			$query = 
 			"SELECT DISTINCT t.latitude, t.longitude,\n"
 			. " t.id,   t.special_info, fnum, f.name as floor \n"
-			. "FROM $cat t, floors f, regions\n"
+			. "FROM $cat t \n"
 			. "\n"
-			. "WHERE t.fid = f.fid \n"
+			. "LEFT JOIN floors f ON f.fid = t.fid \n"
 		    . "\n"
-		    . "AND $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
+		    . "WHERE $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
 		    . "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n"
 			//. "AND t.latitude = $lat AND t.longitude= $long \n"
 			. "ORDER BY t.fid DESC, special_info DESC LIMIT 0, 100" ;
@@ -170,8 +162,8 @@ function get_single_category($lat, $long, $cat, $rad) {
 											(int)$row['longitude'],
 									 'info' => 
 											$row['special_info'],
-									 'floor_names' => 
-											array( $row['floor'] ),
+									 'floor_names' =>  
+											$row['floor'] == null ? array() : array( $row['floor'] ),
 									 'cat' => 
 									       		$cat,
 									 'item' =>

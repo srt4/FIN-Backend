@@ -103,9 +103,6 @@
 				</div>
 			</form>
 			<? include('building.map.php') ?>
-		    <script>
-                 $("mapHolder").hide();
-	        </script>
 			<div>
 				<button id = "submitbutton" name = "submitbutton" type="button" value="submit">Submit</button>
 			</div>

@@ -39,6 +39,8 @@ function outFunc() {
 	$("floors").innerHTML = "<option value = 0>No Floor ID</option>";
 	// code amended to show the map helper - 4/18/11
 	$("mapHolder").show();
+	$("mapHolder").width(500);
+	$("mapHolder").height(200);
 }
 
 function repopulate() {
