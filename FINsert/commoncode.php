@@ -6,42 +6,6 @@
 	commoncode.php simply stores code that is redundantly used in many of the individual form pages.
 	It includes the linking between multiple files that are used in the multiple forms.
 */
-function getCategories() {
-	include 'config.php';
-	include 'opendb.php';
-	
-	$sql = "SHOW TABLES FROM $dbname";
-	$result = mysql_query($sql);
-	
-	if (!$result) {
-		echo "DB Error, could not list tables\n";
-		echo 'MySQL Error: ' . mysql_error();
-		exit;
-	}
-	$toReturn = "";
-	$row = mysql_fetch_row($result);
-	$name = "{$row[0]}";
-	if ($name != "buildings" && $name != "regions" && $name != "floors" && $name != "update_cache" &&
-		$name != "logged_in_cache" && $name != "super_users" && $name != "delete_log" &&
-		$name != "admin" && $name != "applicants") {
-		$toReturn = $toReturn.$name;
-	}
-	while ($row = mysql_fetch_row($result)) {
-		$name = "{$row[0]}";
-		if ($name == "atms") {
-			$toReturn = $toReturn.$name;
-		} else {
-			if ($name != "buildings" && $name != "regions" && $name != "floors" && $name != "update_cache" &&
-				$name != "logged_in_cache" && $name != "super_users" && $name != "delete_log" &&
-				$name != "admin" && $name != "applicants") {
-				$toReturn = $toReturn.",".$name;
-			}
-		}
-	}
-	
-	return $toReturn;
-}
-
 function loggedIn() {
 	include 'config.php';
 	include 'opendb.php';
