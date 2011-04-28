@@ -66,125 +66,51 @@ function get_object($lat, $long, $cat, $rad) {
 		return $return_string;
     } 
 }
-
 function get_single_category($lat, $long, $cat, $rad) {
-    $rad = $rad == 0 ? 1 : $rad; // sort of a hack also
+    $rad = $rad == 0 ? 1 : $rad; // Search the current building with radius = 0 
 	switch ($cat) { 
 		case "school_supplies": // special case
 			$supplies_array = array ( 'blue_book', 'scantron', 'printing' );
 			if ( $_REQUEST['item'] != null && $_REQUEST['item'] != "" ) {
 				$supplies_array = array ( $_REQUEST['item'] );
 			}
-		    $json_array = array();			      
-		    foreach ($supplies_array as $supply) {
-				$query = 
-					"SELECT DISTINCT t.latitude, t.longitude, t.id, \n" 
-					. "t.special_info, fnum, f.name as floor \n"
-					. "FROM school_supplies t, floors f, regions \n"
-					. "WHERE t.fid = f.fid AND $supply = 1 \n"
-					. "AND $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
-					. "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n"
-					//. "AND t.latitude = $lat AND t.longitude = $long \n"
-					. "ORDER BY t.fid DESC, t.special_info DESC LIMIT 0, 100";
-				/* 
-				$query = "SELECT DISTINCT t.latitude, t.longitude, t.id, \n" 
-					. "t.special_info, fnum, f.name as floor \n"
-					. "FROM school_supplies t, floors f, regions\n"
-					. "WHERE t.fid = f.fid ";
-				$query .= $supply == null ? "" : "AND $supply = 1 \n"; 
-				
-				$query .= . "AND $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
-					. "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n"
-					. "ORDER BY t.fid, t.special_info LIMIT 0, 100";
-				
-				
-				   
-				*/
-				$result = mysql_query($query);
-				if (!$result) {
-					echo mysql_error();
-					die ("MySQL encountered an error: " + mysql_error());
-				}
-				
-				while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-					$row_array = array( 'id'   => 
-									(int)$row['id'],
-								'lat'  => 
-									(int)$row['latitude'],
-								'long' => 
-									(int)$row['longitude'],
-								'info' => 
-									$row['special_info'],
-								'floor_names' => 
-									array( $row['floor'] ),
-								'cat' => 
-									$cat,
-								'item' =>
-									$supply);
-				// This is probably a good thing to have with an item.
-			    if (building_id){
-			        $row_array['bid'] = (int)$row['bid'];
-			    }
-				array_push($json_array, $row_array);    
-				}
-		   }
-
-			return json_encode($json_array); 
-		
+			$return_string;    
+			foreach ($supplies_array as $supply) {
+				$return_string .= get_single_category($lat, $long, $supply, $rad);
+			}
+			return $return_string;	
 			break;
-			
 		default: // non-special cases    
-			$query = 
-			"SELECT DISTINCT t.latitude, t.longitude,\n"
-			. " t.id,   t.special_info, fnum, f.name as floor \n"
-			. "FROM $cat t \n"
-			. "\n"
-			. "LEFT JOIN floors f ON f.fid = t.fid \n"
-		    . "\n"
-		    . "WHERE $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
-		    . "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n"
-			//. "AND t.latitude = $lat AND t.longitude= $long \n"
-			. "ORDER BY t.fid DESC, special_info DESC LIMIT 0, 100" ;
-			
+			$query = "Select *, i.item_id as id, f.name as floor From testTable2 i "
+			       . "Join categories c On i.cat_id = c.cat_id "
+ 			       . "Join floors f On i.fid = f.fid "
+			       . "Where c.name = '$cat' limit 0, 100";	
 			$result = mysql_query($query);
 			if (!$result) {
 				echo mysql_error();
 				die ("MySQL encountered an error: " + mysql_error());
 			}
 			$json_array = array();
-			
+			$is_school_supply = ($cat == "blue_book" || $cat == "scantron" || $cat == "printing" );
 			while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-				$row_array = array( 'id'   => 
-											(int)$row['id'],
-									 'lat'  => 
-											(int)$row['latitude'],
-									 'long' => 
-											(int)$row['longitude'],
-									 'info' => 
-											$row['special_info'],
-									 'floor_names' =>  
-											$row['floor'] == null ? array() : array( $row['floor'] ),
-									 'cat' => 
-									       		$cat,
-									 'item' =>
-									 		"");
+				$item = $is_school_supply ? $cat : "";
+				$cat2 = $is_school_supply ? "school_supplies" : $cat;
+				$row_array = array( 'id'   => (int)$row['id'],
+						    'lat'  => (int)$row['latitude'],
+						    'long' => (int)$row['longitude'],
+						    'info' => $row['special_info'],
+						    'floor_names' => $row['floor'] == null ? array() : array( $row['floor'] ),
+						    'cat' => $cat2,
+						    'item' => $item );
 				// This is probably a good thing to have with an item.
-			    if (building_id){
-			        $row_array['bid'] = (int)$row['bid'];
-			    }
-			   array_push($json_array, $row_array);    
+				if (building_id){
+			        	$row_array['bid'] = (int)$row['bid'];
+				}
+				array_push($json_array, $row_array);    
 			}
-
 			return json_encode($json_array); 
-			
 			break; // probably unnecessary with return?
 	}
 }
-
 include "FINsert/closedb.php"; // close the db connection
-
-$time_end = microtime(true);
-$time = $time_end - $time_start;
-
-//echo "\n <!-- Script took $time seconds -->";
 ?>
