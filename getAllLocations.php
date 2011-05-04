@@ -1,4 +1,3 @@
-
 <?php
 
 /**
@@ -50,22 +49,29 @@ if ( isset($_REQUEST["lat"]) && isset($_REQUEST["long"])
  * returns all items at and around that area
  * @lat: latitude in SQL format
  * @long: longitude in SQL format
- * @cat: (optional) item category - an "imploded" array delineated with |s
+ * @cat: (optional) item categories in array form: ["coffee", "atms"]
  * @radius: (optional) search radius (m) 
- * @returns: array, which can be turned into JSON
+ * @returns: JSON string
  */
 function get_object($lat, $long, $cat, $rad) {
     // base case: a single element in the array
     if (is_array($cat) && count($cat) > 0) {
-		$return_string = "";
-		foreach ($cat as $cat_item) {
-			$piece = get_single_category($lat, $long, $cat_item, $rad);
-			if ($piece != "[]") // hack - don't return empty results
-				$return_string .= $piece;
-		}
-		return $return_string;
+	$return_string = "";
+	foreach ($cat as $cat_item) {
+		$piece = get_single_category($lat, $long, $cat_item, $rad);
+		if ($piece != "[]") // hack - don't return empty results
+			$return_string .= $piece;
+	}
+	return $return_string;
     } 
 }
+
+/**
+ * get_single_category function accepts a single category and outputs
+ * in JSON the items associated with a given category, lat, lon, and radius
+ * All variables except $cat are used in the same fashion as get_object.
+ * @returns: JSON string
+ */
 function get_single_category($lat, $long, $cat, $rad) {
     $rad = $rad == 0 ? 1 : $rad; // Search the current building with radius = 0 
 	switch ($cat) { 
@@ -81,10 +87,10 @@ function get_single_category($lat, $long, $cat, $rad) {
 			return $return_string;	
 			break;
 		default: // non-special cases    
-			$query = "Select *, i.item_id as id, f.name as floor From testTable2 i "
-			       . "Join categories c On i.cat_id = c.cat_id "
- 			       . "Join floors f On i.fid = f.fid "
-			       . "Where c.name = '$cat' limit 0, 100";	
+			$query = "SELECT *, i.item_id AS id, f.name AS floor FROM testTable2 i "
+			       . "JOIN categories c ON i.cat_id = c.cat_id "
+ 			       . "JOIN floors f ON i.fid = f.fid "
+			       . "WHERE c.name = '$cat' LIMIT 0, 100";	
 			$result = mysql_query($query);
 			if (!$result) {
 				echo mysql_error();
