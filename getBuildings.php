@@ -8,11 +8,11 @@
 	$rad = 9999; // over 9000?!?!?!
 	
 	$query=  "SELECT DISTINCT t.latitude, t.longitude, t.bid, t.name, fid, fnum, f.name as floors\n"
-		    . "FROM buildings t, floors f\n"
-		    . "WHERE t.bid = f.bid\n";
-	$query .= "AND $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
-			. "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n";
-	$query .= "ORDER BY t.bid, fnum DESC;";
+		. "FROM buildings t, floors f\n"
+		. "WHERE t.bid = f.bid\n";
+		. "AND $lat > (t.latitude - $rad) AND $lat < (t.latitude + $rad) \n"
+		. "AND $long > (t.longitude - $rad) AND $long < (t.longitude + $rad) \n";
+		. "ORDER BY t.bid, fnum DESC;";
 	
 	$results = mysql_query($query);
 	
